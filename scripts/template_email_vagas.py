@@ -450,6 +450,13 @@ def formatar_email_html(
     .stats-cell {{ display:block !important; width:100% !important;
                    padding:0 0 8px 0 !important; }}
   }}
+  @media print {{
+    body {{ background:#ffffff !important; font-size:11pt; }}
+    table {{ max-width:100% !important; }}
+    .email-wrapper {{ padding:0 !important; }}
+    a[href]:after {{ content:" (" attr(href) ")"; font-size:9pt; color:#475569; }}
+    tr, td {{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
+  }}
 </style>
 </head>
 <body style="margin:0;padding:0;background:{COLORS['bg_page']};
