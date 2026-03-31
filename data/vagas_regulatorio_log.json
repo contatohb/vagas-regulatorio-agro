@@ -1,0 +1,106 @@
+[
+  {
+    "data": "2026-03-17",
+    "total_nacionais": 0,
+    "total_internacionais": 0,
+    "email_enviado": false,
+    "erros": [],
+    "timestamp": "2026-03-18T02:27:29.980150+00:00"
+  },
+  {
+    "data": "2026-03-17",
+    "total_nacionais": 0,
+    "total_internacionais": 0,
+    "email_enviado": true,
+    "erros": [],
+    "timestamp": "2026-03-18T02:30:34.804008+00:00"
+  },
+  {
+    "data": "2026-03-18",
+    "total_nacionais": 0,
+    "total_internacionais": 0,
+    "email_enviado": false,
+    "erros": [],
+    "timestamp": "2026-03-18T13:59:42.772254+00:00"
+  },
+  {
+    "data": "2026-03-18",
+    "total_nacionais": 0,
+    "total_internacionais": 0,
+    "email_enviado": true,
+    "erros": [],
+    "timestamp": "2026-03-18T20:23:09.588815+00:00"
+  },
+  {
+    "data": "2026-03-18",
+    "total_nacionais": 5,
+    "total_internacionais": 0,
+    "email_enviado": true,
+    "erros": [],
+    "timestamp": "2026-03-18T20:25:42.824123+00:00"
+  },
+  {
+    "data": "2026-03-18",
+    "total_nacionais": 2,
+    "total_internacionais": 1,
+    "email_enviado": true,
+    "erros": [],
+    "timestamp": "2026-03-18T20:38:27.675112+00:00"
+  },
+  {
+    "data": "2026-03-18",
+    "total_nacionais": 2,
+    "total_internacionais": 3,
+    "email_enviado": true,
+    "erros": [],
+    "timestamp": "2026-03-18T20:42:26.061164+00:00"
+  },
+  {
+    "data": "2026-03-18",
+    "total_nacionais": 1,
+    "total_internacionais": 1,
+    "email_enviado": true,
+    "erros": [],
+    "timestamp": "2026-03-18T20:47:48.327003+00:00"
+  },
+  {
+    "data": "2026-03-18",
+    "total_nacionais": 0,
+    "total_internacionais": 0,
+    "email_enviado": true,
+    "erros": [],
+    "timestamp": "2026-03-18T20:47:57.518970+00:00"
+  },
+  {
+    "data": "2026-03-19",
+    "total_nacionais": 2,
+    "total_internacionais": 3,
+    "email_enviado": true,
+    "erros": [],
+    "timestamp": "2026-03-19T11:49:47.437398+00:00"
+  },
+  {
+    "data": "2026-03-19",
+    "total_nacionais": 0,
+    "total_internacionais": 0,
+    "email_enviado": true,
+    "erros": [],
+    "timestamp": "2026-03-19T11:54:24.974232+00:00"
+  },
+  {
+    "data": "2026-03-20",
+    "total_nacionais": 0,
+    "total_internacionais": 0,
+    "email_enviado": true,
+    "erros": [],
+    "timestamp": "2026-03-20T16:12:50.136275+00:00"
+  },
+  {
+    "data": "2026-03-21",
+    "total_nacionais": 0,
+    "total_internacionais": 0,
+    "email_enviado": true,
+    "erros": [],
+    "timestamp": "2026-03-21T11:09:56.769460+00:00"
+  }
+]
