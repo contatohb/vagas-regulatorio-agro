@@ -514,6 +514,81 @@ def _make_vaga(titulo: str, empresa: str, localizacao: str, link: str,
 # Fonte 1: LinkedIn Jobs (endpoint público)
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _buscar_serpapi_google_jobs(api_key: str) -> List[Dict]:
+    """
+    Busca vagas no Google Jobs via SerpAPI.
+    Alternativa robusta ao LinkedIn jobs-guest quando rodando em IPs de datacenter.
+    Requer SERPAPI_KEY configurada como secret no GitHub Actions.
+    """
+    if not api_key:
+        return []
+
+    queries = [
+        "gerente assuntos regulatorios agrotoxicos",
+        "regulatory affairs manager crop protection Brazil",
+        "diretor assuntos regulatorios defensivos agricolas",
+        "LATAM regulatory affairs manager agrochemical",
+        "director regulatory affairs crop protection",
+        "head regulatory affairs agriculture Brazil",
+    ]
+
+    vagas: List[Dict] = []
+    seen_ids: set = set()
+
+    for query in queries:
+        try:
+            params = {
+                "engine": "google_jobs",
+                "q": query,
+                "api_key": api_key,
+                "hl": "pt",
+                "gl": "br",
+                "chips": "date_posted:week",  # últimos 7 dias
+            }
+            r = requests.get("https://serpapi.com/search", params=params, timeout=20)
+            if r.status_code != 200:
+                logger.debug(f"SerpAPI [{query}]: HTTP {r.status_code}")
+                continue
+            data = r.json()
+            for job in data.get("jobs_results", []):
+                titulo = job.get("title", "").strip()
+                empresa = job.get("company_name", "").strip()
+                localizacao = job.get("location", "").strip()
+                link = ""
+                # Prefer direct apply link
+                for ext in job.get("detected_extensions", {}).keys():
+                    pass
+                apply_options = job.get("apply_options", [])
+                if apply_options:
+                    link = apply_options[0].get("link", "")
+                if not link:
+                    link = job.get("share_link", f"https://www.google.com/search?q={quote_plus(titulo + ' ' + empresa)}")
+
+                vaga_id = _gerar_id({"titulo": titulo, "empresa": empresa, "link": link})
+                if vaga_id in seen_ids:
+                    continue
+                seen_ids.add(vaga_id)
+
+                descricao = job.get("description", "")[:400]
+                data_pub = job.get("detected_extensions", {}).get("posted_at", "")
+
+                vagas.append(_make_vaga(
+                    titulo=titulo,
+                    empresa=empresa,
+                    localizacao=localizacao,
+                    link=link,
+                    descricao=descricao,
+                    data_pub=data_pub,
+                    fonte="SerpAPI/Google Jobs",
+                ))
+            time.sleep(SLEEP_BETWEEN)
+        except Exception as exc:
+            logger.debug(f"SerpAPI [{query}]: {exc}")
+            continue
+
+    return vagas
+
+
 def _buscar_linkedin(session: requests.Session) -> List[Dict]:
     """
     Busca vagas no LinkedIn via endpoint jobs-guest (sem autenticação).
@@ -1506,9 +1581,25 @@ def buscar_vagas(
         erros.append(f"OpenAI: {e}")
         logger.error(f"OpenAI: {e}")
 
-    # ── LinkedIn
+    # ── SerpAPI Google Jobs (fallback quando LinkedIn bloqueia IPs de datacenter)
+    serpapi_key = os.getenv("SERPAPI_KEY", "")
+    if serpapi_key:
+        try:
+            vagas_serp = _buscar_serpapi_google_jobs(serpapi_key)
+            todas_vagas.extend(vagas_serp)
+            logger.info(f"SerpAPI Google Jobs: {len(vagas_serp)} vagas")
+        except Exception as e:
+            erros.append(f"SerpAPI: {e}")
+            logger.warning(f"SerpAPI: {e}")
+    else:
+        logger.debug("SERPAPI_KEY não configurada — pulando Google Jobs")
+
+    # ── LinkedIn (jobs-guest público — pode ser bloqueado em IPs de datacenter)
     try:
-        todas_vagas.extend(_buscar_linkedin(session))
+        vagas_li = _buscar_linkedin(session)
+        if not vagas_li:
+            logger.warning("LinkedIn jobs-guest: retornou 0 vagas — provável bloqueio de IP de datacenter (GitHub Actions/AWS). Configure SERPAPI_KEY como fallback.")
+        todas_vagas.extend(vagas_li)
     except Exception as e:
         erros.append(f"LinkedIn: {e}")
         logger.error(f"LinkedIn: {e}")
