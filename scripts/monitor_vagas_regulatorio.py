@@ -263,7 +263,7 @@ def _eh_combinacao_veterinaria(titulo: str, descricao: str = "") -> bool:
 # Portais especializados em agronegócio: cargo regulatório é suficiente
 # (setor agro é implícito pela especialização do portal)
 PORTAIS_AGRO_ESPECIALIZADOS = {
-    "agrobase", "agro2business", "agcareers",
+    "agrobase", "agro2business", "agcareers", "gupy",
 }
 
 
@@ -682,91 +682,15 @@ def _buscar_linkedin(session: requests.Session) -> List[Dict]:
 
 def _buscar_vagascom(session: requests.Session) -> List[Dict]:
     """
-    Vagas.com — funciona via requests (200 OK confirmado).
-    Estrutura: li.vaga com h2/h3 para título, span para empresa e local.
+    Vagas.com — DESABILITADO: site redireciona todo tráfego requests via JavaScript
+    para site.vagas.com.br/GoHome.asp — scraping por requests é impossível.
+    Mantido como stub para não quebrar o pipeline.
     """
-    vagas = []
-    seen_ids: set = set()
-
-    slugs = [
-        "gerente-assuntos-regulatorios",
-        "gerente-regulatorio",
-        "diretor-assuntos-regulatorios",
-        "regulatory-affairs-manager",
-        "head-regulatory-affairs",
-        "gerente-registro-agrotoxicos",
-        "gerente-regulatorio-agro",
-    ]
-
-    for slug in slugs:
-        url = f"https://www.vagas.com.br/vagas-de-{slug}"
-        html = _get_html(url, session)
-        if not html:
-            time.sleep(SLEEP_BETWEEN)
-            continue
-
-        soup = BeautifulSoup(html, "html.parser")
-        cards = soup.select("li.vaga")
-
-        for card in cards:
-            try:
-                # Título: primeiro link ou h2/h3
-                titulo_el = card.find(["h2", "h3"])
-                if not titulo_el:
-                    titulo_el = card.find("a")
-                titulo = titulo_el.get_text(strip=True) if titulo_el else ""
-                # Limpar espaços extras
-                titulo = re.sub(r'\s+', ' ', titulo).strip()
-
-                # Empresa: span ou div com classe empresa
-                empresa = ""
-                for cls in ["empresa", "company", "empregador"]:
-                    el = card.find(["span", "div"], class_=re.compile(cls, re.I))
-                    if el:
-                        empresa = el.get_text(strip=True)
-                        break
-                # Se não encontrou, pegar o segundo texto do card
-                if not empresa:
-                    textos = [t.strip() for t in card.get_text(separator="\n").split("\n") if t.strip()]
-                    if len(textos) > 1:
-                        empresa = textos[1]
-
-                # Localização
-                localizacao = ""
-                for cls in ["cidade", "local", "location", "estado"]:
-                    el = card.find(["span", "div"], class_=re.compile(cls, re.I))
-                    if el:
-                        localizacao = el.get_text(strip=True)
-                        break
-
-                # Link
-                link_el = card.find("a", href=re.compile(r"/vagas/"))
-                link = ""
-                if link_el:
-                    href = link_el.get("href", "")
-                    link = href if href.startswith("http") else f"https://www.vagas.com.br{href}"
-
-                # Descrição parcial
-                descricao = card.get_text(separator=" ", strip=True)[:500]
-
-                if not titulo or len(titulo) < 5:
-                    continue
-
-                vaga_id = _gerar_id({"titulo": titulo, "empresa": empresa, "link": link})
-                if vaga_id in seen_ids:
-                    continue
-                seen_ids.add(vaga_id)
-
-                vagas.append(_make_vaga(titulo, empresa, localizacao, link or url,
-                                        "Vagas.com", descricao=descricao))
-
-            except Exception as exc:
-                logger.debug(f"Vagas.com card: {exc}")
-
-        time.sleep(SLEEP_BETWEEN)
-
-    logger.info(f"Vagas.com: {len(vagas)} vagas")
-    return vagas
+    logger.warning(
+        "Vagas.com: DESABILITADO — site usa redirecionamento JS (GoHome.asp) "
+        "que impede scraping por requests. Retornando lista vazia."
+    )
+    return []
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -775,82 +699,14 @@ def _buscar_vagascom(session: requests.Session) -> List[Dict]:
 
 def _buscar_agro2business(session: requests.Session) -> List[Dict]:
     """
-    Agro2Business — retorna 9 cards por página de busca.
-    Estrutura: div.card com formato 'N CARGO | EMPRESA | CIDADE...'
+    Agro2Business — DESABILITADO: certificado SSL inválido (hostname mismatch).
+    Mantido como stub para não quebrar o pipeline.
     """
-    vagas = []
-    seen_ids: set = set()
-
-    queries = [
-        "regulat%C3%B3rio",
-        "regulatory",
-        "registro",
-        "gerente+regulat%C3%B3rio",
-        "assuntos+regulat%C3%B3rios",
-        "regulatory+affairs",
-    ]
-
-    for q in queries:
-        url = f"https://agro2business.com/oportunidades?search={q}"
-        html = _get_html(url, session)
-        if not html:
-            time.sleep(SLEEP_BETWEEN)
-            continue
-
-        soup = BeautifulSoup(html, "html.parser")
-        cards = soup.find_all("div", class_="card")
-
-        for card in cards:
-            try:
-                # Estrutura: 'N CARGO | EMPRESA | CIDADE | ... | Descrição: TEXTO | Ver Vaga'
-                txt = card.get_text(separator=" | ", strip=True)
-                # Remover número inicial
-                txt_clean = re.sub(r"^\d+\s*", "", txt)
-                partes = [p.strip() for p in txt_clean.split(" | ") if p.strip()]
-
-                titulo = partes[0] if partes else ""
-                # Remover emojis e caracteres especiais do título
-                titulo = re.sub(r"[^\w\s\-/(),.:!?]", "", titulo, flags=re.UNICODE).strip()
-                # Limpar "Estamos contratando!" e similares
-                titulo = re.sub(r"^(Estamos contratando!?\s*|Vaga:\s*)", "", titulo, flags=re.I).strip()
-
-                empresa_h4 = card.find("h4")
-                empresa = empresa_h4.get_text(strip=True) if empresa_h4 else ""
-
-                localizacao = partes[1] if len(partes) > 1 else ""
-
-                # Link
-                link_el = card.find("a", href=re.compile(r"/oportunidade"))
-                link = ""
-                if link_el:
-                    href = link_el.get("href", "")
-                    link = href if href.startswith("http") else f"https://agro2business.com{href}"
-
-                # Descrição parcial
-                descricao = ""
-                for p in partes:
-                    if "Descrição:" in p or len(p) > 80:
-                        descricao = p.replace("Descrição:", "").strip()
-                        break
-
-                if not titulo or len(titulo) < 5:
-                    continue
-
-                vaga_id = _gerar_id({"titulo": titulo, "empresa": empresa, "link": link})
-                if vaga_id in seen_ids:
-                    continue
-                seen_ids.add(vaga_id)
-
-                vagas.append(_make_vaga(titulo, empresa, localizacao, link or url,
-                                        "Agro2Business", descricao=descricao))
-
-            except Exception as exc:
-                logger.debug(f"Agro2Business card: {exc}")
-
-        time.sleep(SLEEP_BETWEEN)
-
-    logger.info(f"Agro2Business: {len(vagas)} vagas")
-    return vagas
+    logger.warning(
+        "Agro2Business: DESABILITADO — erro de certificado SSL (hostname mismatch). "
+        "Retornando lista vazia."
+    )
+    return []
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -960,7 +816,7 @@ def _buscar_agcareers(session: requests.Session) -> List[Dict]:
     ]
 
     for query in queries:
-        url = f"https://www.agcareers.com/jobs/?q={quote_plus(query)}"
+        url = f"https://www.agcareers.com/results.cfm?keywords={quote_plus(query)}&OrderBy=IsNull(r.Rank%2C+0)+DESC%2C+LastUpdated+Desc&headerSearchform=yes"
         html = _get_html(url, session)
         if not html:
             time.sleep(SLEEP_BETWEEN)
@@ -1118,6 +974,112 @@ def _buscar_gupy_playwright() -> List[Dict]:
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Fonte 6: Portais corporativos
+# ──────────────────────────────────────────────────────────────────────────────
+# Fonte 6b: Gupy Company Subdomains (via __NEXT_DATA__ SSR)
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Empresas do setor agro/fitossanitário com portais Gupy ativos (verificados)
+GUPY_SUBDOMAINS = [
+    {"subdomain": "ourofinoagro",  "empresa": "Ourofino Agrociência"},
+    {"subdomain": "ihara",          "empresa": "IHARA"},
+    {"subdomain": "adama",          "empresa": "ADAMA Brasil"},
+    {"subdomain": "nortox",         "empresa": "Nortox"},
+    {"subdomain": "heringer",       "empresa": "Heringer"},
+    {"subdomain": "coopercitrus",   "empresa": "Coopercitrus"},
+    {"subdomain": "ourofino",       "empresa": "Ourofino Saúde Animal"},
+    {"subdomain": "terra",          "empresa": "Terra Agro"},
+]
+
+
+def _buscar_gupy_subdomains(session: requests.Session) -> List[Dict]:
+    """
+    Portais Gupy de empresas do agronegócio — usa __NEXT_DATA__ (Next.js SSR).
+    Cada portal exporta a lista de vagas abertas no HTML inicial sem JS.
+    Filtra por palavras-chave regulatórias após coleta.
+    Verificado funcional em 2026-05.
+    """
+    vagas = []
+    seen_ids: set = set()
+
+    TERMOS_BUSCA = [
+        "regulat", "regulatory", "registro", "assuntos reg",
+        "fitossanit", "agrotoxico", "agrotóxico", "defensivo",
+        "rastreab", "compliance", "licenciamento", "ambiental",
+        "estudos oficiais", "registro de produto", "aprovação de produto",
+        "product registration", "label", "rotulagem",
+    ]
+
+    for portal in GUPY_SUBDOMAINS:
+        subdomain = portal["subdomain"]
+        empresa = portal["empresa"]
+        url = f"https://{subdomain}.gupy.io/"
+        try:
+            r = session.get(url, timeout=TIMEOUT)
+            if r.status_code != 200:
+                logger.debug(f"Gupy/{subdomain}: HTTP {r.status_code}")
+                time.sleep(SLEEP_BETWEEN)
+                continue
+
+            # Extrair __NEXT_DATA__ do SSR
+            nd_match = re.search(
+                r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>',
+                r.text, re.DOTALL
+            )
+            if not nd_match:
+                logger.debug(f"Gupy/{subdomain}: __NEXT_DATA__ não encontrado")
+                time.sleep(SLEEP_BETWEEN)
+                continue
+
+            import json as _json
+            data = _json.loads(nd_match.group(1))
+            jobs = data.get("props", {}).get("pageProps", {}).get("jobs", [])
+
+            for job in jobs:
+                try:
+                    titulo = job.get("title", "") or ""
+                    if not titulo or len(titulo) < 5:
+                        continue
+
+                    job_id = job.get("id", "")
+                    workplace = job.get("workplace", {}) or {}
+                    addr = workplace.get("address", {}) or {}
+                    city = addr.get("city", "")
+                    state = addr.get("stateShortName", "")
+                    localizacao = f"{city}/{state}".strip("/") if city or state else ""
+
+                    link = f"https://{subdomain}.gupy.io/job/{job_id}" if job_id else url
+                    descricao = job.get("description", "") or ""
+
+                    # Filtrar por relevância regulatória
+                    texto_check = (titulo + " " + descricao).lower()
+                    if not any(t in texto_check for t in TERMOS_BUSCA):
+                        continue
+
+                    vaga_id = _gerar_id({"titulo": titulo, "empresa": empresa, "link": link})
+                    if vaga_id in seen_ids:
+                        continue
+                    seen_ids.add(vaga_id)
+
+                    vagas.append(_make_vaga(
+                        titulo=titulo,
+                        empresa=empresa,
+                        localizacao=localizacao,
+                        link=link,
+                        fonte="Gupy",
+                        descricao=descricao,
+                    ))
+                except Exception as exc:
+                    logger.debug(f"Gupy/{subdomain} job: {exc}")
+
+        except Exception as exc:
+            logger.debug(f"Gupy/{subdomain}: {exc}")
+
+        time.sleep(SLEEP_BETWEEN)
+
+    logger.info(f"Gupy subdomains: {len(vagas)} vagas regulatórias encontradas")
+    return vagas
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 
 PORTAIS_CORPORATIVOS = [
@@ -1132,7 +1094,6 @@ PORTAIS_CORPORATIVOS = [
         "empresa": "Corteva",
         "urls": [
             "https://careers.corteva.com/search-jobs?q=regulatory+affairs&l=Brazil",
-            "https://careers.corteva.com/search-jobs?q=regulatory",
         ],
     },
     {
@@ -1154,15 +1115,9 @@ PORTAIS_CORPORATIVOS = [
         ],
     },
     {
-        "empresa": "Ourofino Agrociência",
-        "urls": [
-            "https://ourofino.gupy.io/",
-        ],
-    },
-    {
         "empresa": "FMC",
         "urls": [
-            "https://jobs.fmc.com/search-jobs?q=regulatory&l=Brazil",
+            "https://fmc.wd1.myworkdayjobs.com/en-US/FMC_Careers?q=regulatory",
         ],
     },
     {
@@ -1193,18 +1148,6 @@ PORTAIS_CORPORATIVOS = [
         "empresa": "Mosaic",
         "urls": [
             "https://www.mosaicco.com/careers",
-        ],
-    },
-    {
-        "empresa": "Lavoro Agro",
-        "urls": [
-            "https://lavoro.gupy.io/",
-        ],
-    },
-    {
-        "empresa": "Heringer",
-        "urls": [
-            "https://heringer.gupy.io/",
         ],
     },
 ]  # FIM_PORTAIS_CORPORATIVOS
@@ -1639,6 +1582,13 @@ def buscar_vagas(
     # except Exception as e:
     #     erros.append(f"Gupy: {e}")
     #     logger.error(f"Gupy: {e}")
+
+    # ── Gupy subdomains (via __NEXT_DATA__ SSR — não requer Playwright)
+    try:
+        todas_vagas.extend(_buscar_gupy_subdomains(session))
+    except Exception as e:
+        erros.append(f"Gupy subdomains: {e}")
+        logger.error(f"Gupy subdomains: {e}")
 
     # ── Portais corporativos
     for portal in PORTAIS_CORPORATIVOS:
