@@ -235,7 +235,12 @@ def _normalizar(texto: str) -> str:
 
 
 def _gerar_id(vaga: Dict) -> str:
-    chave = f"{vaga.get('titulo', '')}{vaga.get('empresa', '')}{vaga.get('link', '')}"
+    # Usar apenas título + empresa (normalizados) para estabilidade entre runs.
+    # Links/URLs podem mudar (query strings, tokens) e causariam o mesmo cargo
+    # a aparecer como "novo" todo dia.
+    titulo = _normalizar(vaga.get('titulo', ''))
+    empresa = _normalizar(vaga.get('empresa', ''))
+    chave = f"{titulo}|{empresa}"
     return hashlib.md5(chave.encode("utf-8")).hexdigest()
 
 
