@@ -115,6 +115,14 @@ def enviar_email_html(
     _password = (smtp_password or GMAIL_APP_PASSWORD).replace(" ", "")
     _sender = sender or _user
 
+    if not _password:
+        print(
+            "[enviar_email_html] GMAIL_APP_PASSWORD não configurado. "
+            "Defina a variável de ambiente com a App Password de 16 caracteres.",
+            file=sys.stderr,
+        )
+        return False
+
     msg = _build_mime_message(to, subject, html_body, text_body, _sender)
 
     try:
