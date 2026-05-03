@@ -36,7 +36,7 @@ SMTP_PORT = 587  # STARTTLS
 GMAIL_USER = os.getenv("GMAIL_SMTP_USER", "huddsong@gmail.com")
 # App Password gerada em myaccount.google.com/apppasswords
 # Armazenada sem espaços: "mwnv dnii uggt aikl" → "mwnvdniiuugtaikl"
-_RAW_APP_PASS = os.getenv("GMAIL_APP_PASSWORD", "mwnvdniiuggtaikl")
+_RAW_APP_PASS = os.getenv("GMAIL_APP_PASSWORD", "")
 GMAIL_APP_PASSWORD = _RAW_APP_PASS.replace(" ", "")
 
 
