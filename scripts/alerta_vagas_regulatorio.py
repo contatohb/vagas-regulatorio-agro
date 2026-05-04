@@ -49,7 +49,7 @@ logger = logging.getLogger("alerta_vagas_regulatorio")
 # ─────────────────────────────────────────────────────────────────────────────
 
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-_DATA_DIR = os.path.join(_SCRIPT_DIR, "data")
+_DATA_DIR = os.path.join(os.path.dirname(_SCRIPT_DIR), "data")
 
 RECIPIENT = os.getenv("MONITOR_RECIPIENT", "huddsong@gmail.com")
 SEEN_PATH = os.path.join(_DATA_DIR, "vagas_regulatorio_seen.json")

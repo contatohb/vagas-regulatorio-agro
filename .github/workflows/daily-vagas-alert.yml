@@ -47,7 +47,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/vagas_seen.json || true
+          git add data/vagas_regulatorio_seen.json data/vagas_regulatorio_log.json || true
           git diff --cached --quiet || git commit -m "chore: update vagas seen history [skip ci]"
           git pull --rebase origin main || true
           git push || true
