@@ -12,7 +12,7 @@ Critérios de alerta:
   - Vagas nacionais e internacionais separadas
   - Para internacionais: informa sobre visto e trabalho remoto do Brasil
 
-Destinatário: huddsong@gmail.com
+Destinatário: huddsonviana@gmail.com
 Horário: 08:00 Brasília (11:00 UTC) — agendado via pg_cron Supabase
 
 Uso:
@@ -22,7 +22,7 @@ Variáveis de ambiente (obrigatórias para envio via Mailgun):
     MAILGUN_API_KEY   — chave da API do Mailgun
     MAILGUN_DOMAIN    — domínio verificado (ex: hb-advisory.com.br)
     FROM_EMAIL        — remetente (ex: Intellicore Vagas <noreply@hb-advisory.com.br>)
-    MONITOR_RECIPIENT — destinatário (padrão: huddsong@gmail.com)
+    MONITOR_RECIPIENT — destinatário (padrão: huddsonviana@gmail.com)
 
 Variáveis opcionais (fallback SMTP):
     GMAIL_SMTP_USER     — conta Gmail
@@ -51,7 +51,7 @@ logger = logging.getLogger("alerta_vagas_regulatorio")
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 _DATA_DIR = os.path.join(_SCRIPT_DIR, "data")
 
-RECIPIENT = os.getenv("MONITOR_RECIPIENT", "huddsong@gmail.com")
+RECIPIENT = os.getenv("MONITOR_RECIPIENT", "huddsonviana@gmail.com")
 SEEN_PATH = os.path.join(_DATA_DIR, "vagas_regulatorio_seen.json")
 LOG_PATH = os.path.join(_DATA_DIR, "vagas_regulatorio_log.json")
 

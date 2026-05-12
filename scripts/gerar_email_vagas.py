@@ -33,7 +33,7 @@ logger = logging.getLogger("gerar_email_vagas")
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 _DATA_DIR = os.path.join(_SCRIPT_DIR, "data")
 
-RECIPIENT = os.getenv("MONITOR_RECIPIENT", "huddsong@gmail.com")
+RECIPIENT = os.getenv("MONITOR_RECIPIENT", "huddsonviana@gmail.com")
 SEEN_PATH = os.path.join(_DATA_DIR, "vagas_regulatorio_seen.json")
 LOG_PATH  = os.path.join(_DATA_DIR, "vagas_regulatorio_log.json")
 OUTPUT_PATH = "/tmp/vagas_email_payload.json"
