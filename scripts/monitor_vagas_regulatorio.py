@@ -72,8 +72,8 @@ HEADERS = {
     "Accept-Encoding": "gzip, deflate, br",
     "Connection": "keep-alive",
 }
-TIMEOUT = 15
-SLEEP_BETWEEN = 1.0
+TIMEOUT = 8
+SLEEP_BETWEEN = 0.5
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Critérios de filtragem

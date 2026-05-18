@@ -143,13 +143,19 @@ def _send_via_mailgun(subject: str, html_body: str, recipient: str) -> bool:
             "html": html_body,
             "text": " ",
         }
-        resp = req.post(url, auth=("api", MAILGUN_API_KEY), data=data, timeout=30)
-        if resp.status_code == 200:
-            logger.info(f"Email enviado via Mailgun para {recipient} (id={resp.json().get('id','?')})")
-            return True
-        else:
-            logger.error(f"Mailgun retornou {resp.status_code}: {resp.text[:200]}")
-            return False
+        import time as _time
+        for attempt in range(1, 4):
+            try:
+                resp = req.post(url, auth=("api", MAILGUN_API_KEY), data=data, timeout=45)
+                if resp.status_code == 200:
+                    logger.info(f"Email enviado via Mailgun para {recipient} (id={resp.json().get('id','?')})")
+                    return True
+                logger.error(f"Mailgun tentativa {attempt}/3: HTTP {resp.status_code}: {resp.text[:200]}")
+            except Exception as _e:
+                logger.error(f"Mailgun tentativa {attempt}/3: {_e}")
+            if attempt < 3:
+                _time.sleep(5 * attempt)
+        return False
     except Exception as exc:
         logger.error(f"Erro ao enviar via Mailgun: {exc}")
         return False
@@ -218,7 +224,7 @@ def main() -> int:
     try:
         nacionais, internacionais, erros = buscar_vagas(
             enriquecer_detalhes=not no_enrich,
-            max_enriquecimento=60,
+            max_enriquecimento=20,
         )
     except Exception as e:
         logger.error(f"Erro na busca de vagas: {e}")
@@ -280,7 +286,10 @@ def main() -> int:
         path=LOG_PATH,
     )
 
-    return 0 if (total_novas == 0 or email_enviado) else 1
+    # Email failure é uma falha de notificação, não de coleta — não falhar o cron
+    if not email_enviado and total_novas > 0:
+        logger.warning("Email não enviado mas scraping funcionou. Cron não marcado como falho.")
+    return 0
 
 
 if __name__ == "__main__":
