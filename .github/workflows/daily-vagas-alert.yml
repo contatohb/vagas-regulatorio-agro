@@ -43,7 +43,6 @@ jobs:
           FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
 
