@@ -1347,72 +1347,76 @@ def _buscar_via_openai() -> List[Dict]:
         return []
 
     hoje = date.today().strftime("%d/%m/%Y")
-    prompt = f"""Hoje é {hoje}. Busque vagas de emprego ABERTAS publicadas nos últimos 7 dias para o seguinte perfil:
+    prompt = f"""Hoje é {hoje}. Você deve buscar vagas de emprego ABERTAS E RECENTES (publicadas nos últimos 14 dias) para o seguinte perfil. Acesse CADA fonte listada e faça buscas específicas com os termos fornecidos.
 
 PERFIL DO CANDIDATO:
-Executivo sênior LATAM com +20 anos em Regulatory Affairs em multinacionais (Syngenta, Bayer, ENVU).
-Fluente em português, inglês e espanhol. Disponível para relocação internacional.
-Médico Veterinário com pós em Crop Protection, Toxicologia e Regulatory Science.
+Executivo sênior LATAM com experiência em Regulatory Affairs em multinacionais do agronegócio (Syngenta, Bayer, ENVU, Corteva, BASF, FMC, UPL, Adama).
+Médico Veterinário. Fluente em português, inglês e espanhol. Disponível para relocação.
 
-CARGOS-ALVO (apenas níveis gerenciais/diretivos):
-- Gerente / Diretor / Head / VP de Assuntos Regulatórios
-- Gerente / Diretor de Registro de Agrotóxicos
-- Regulatory Affairs Manager / Director / Head / VP
-- Senior Manager Regulatory Affairs
+CARGOS-ALVO (apenas níveis gerenciais/diretivos — NUNCA analista, coordenador, assistente):
+- Gerente / Gerente Sênior de Assuntos Regulatórios
+- Diretor de Assuntos Regulatórios / Regulatory Affairs Director
+- Head of Regulatory Affairs
+- VP / Vice-Presidente de Regulatory Affairs
 - LATAM Regulatory Affairs Manager / Director / Lead
+- Regulatory Affairs Manager (agrochemicals / crop protection / biopesticides)
 - General Manager Regulatory Affairs
-- Chief Regulatory Officer
-- Executive Regulatory Affairs Manager
-NAO incluir: Analista, Coordenador, Assistente, Estágio
+- Chief Regulatory Officer (CRO)
+- Gerente de Registro de Agrotóxicos / Pesticidas / Defensivos
+- Senior Manager Regulatory Affairs
+- Regulatory Lead LATAM
+- Country Regulatory Manager (Brasil / LATAM)
 
 SETORES-ALVO:
-- Agrotóxicos / Defensivos Agrícolas / Crop Protection / Agrochemicals
-- Fertilizantes / Plant Nutrition
-- Bioinsumos / Biologicals / Biostimulants
-- Controle de Pragas e Vetores / Pest Control / Environmental Science
+- Agrotóxicos / Defensivos Agrícolas / Crop Protection / Agrochemicals / Pesticidas
+- Fertilizantes / Plant Nutrition / Nutrição de Plantas
+- Bioinsumos / Biologicals / Biopesticidas / Biostimulants
+- Controle de Pragas e Vetores / Environmental Science / Pest Control
 - Sanitizantes / Sanitizers
-- Agronegócio / Agribusiness
+- Agronegócio / Agribusiness em geral
 
-COMBINAÇÃO ESPECIAL: qualquer cargo de Assuntos Regulatórios + Medicina Veterinária
+COMBINAÇÃO ESPECIAL: qualquer cargo regulatório + Medicina Veterinária (mesmo fora do agro)
 
-ABRANGÊNCIA GEOGRÁFICA:
-1. Brasil (prioridade)
-2. LATAM / América Latina (vagas regionais)
-3. Global / Internacional (vagas com possibilidade de relocação)
+FONTES OBRIGATÓRIAS — acesse cada URL e busque explicitamente:
+1. LinkedIn Jobs Brasil: https://www.linkedin.com/jobs/search?keywords=gerente+assuntos+regulatorios+agrotoxico&location=Brasil&f_TPR=r604800
+2. LinkedIn Jobs Brasil 2: https://www.linkedin.com/jobs/search?keywords=regulatory+affairs+manager+agro&location=Brazil&f_TPR=r604800
+3. LinkedIn LATAM: https://www.linkedin.com/jobs/search?keywords=LATAM+regulatory+affairs+director+agrochemical&f_TPR=r604800
+4. LinkedIn Global: https://www.linkedin.com/jobs/search?keywords=director+regulatory+affairs+crop+protection&f_TPR=r604800
+5. LinkedIn Veterinary Regulatory: https://www.linkedin.com/jobs/search?keywords=regulatory+affairs+veterinary+manager&f_TPR=r604800
+6. Indeed Brasil: https://br.indeed.com/jobs?q=gerente+assuntos+regulatorios+agrotoxicos&fromage=14
+7. Indeed Brasil 2: https://br.indeed.com/jobs?q=regulatory+affairs+manager+agronegocio&fromage=14
+8. Vagas.com: https://www.vagas.com.br/vagas-de-gerente-regulatorio
+9. Catho: https://www.catho.com.br/vagas/gerente-de-assuntos-regulatorios/
+10. Syngenta Careers: https://www.syngenta.com/en/careers/job-search?query=regulatory+affairs
+11. Corteva Careers: https://jobs.corteva.com/search-jobs/regulatory
+12. Bayer Careers: https://career.bayer.com/en/jobs?search=regulatory+affairs
+13. BASF Careers: https://www.basf.com/global/en/careers/jobs.html?q=regulatory+agriculture
+14. FMC Careers: https://jobs.fmc.com/search/?q=regulatory
+15. UPL Careers: https://careers.upl-ltd.com/search/?q=regulatory
+16. Adama Careers: https://www.adama.com/global/en/careers.html
+17. ENVU Careers: https://www.envu.com/careers
+18. Ourofino Agro: https://www.ourofinoagro.com.br/trabalhe-conosco
+19. Nutrien Careers: https://jobs.nutrien.com/search/?q=regulatory
+20. Yara Careers: https://www.yara.com/careers/open-positions/?query=regulatory
 
-FONTES PARA BUSCAR (acesse cada uma):
-- LinkedIn Jobs Brasil: https://www.linkedin.com/jobs/search?keywords=gerente+assuntos+regulatorios+agrotoxicos&location=Brasil
-- LinkedIn LATAM: https://www.linkedin.com/jobs/search?keywords=LATAM+regulatory+affairs+manager+agrochemical
-- LinkedIn Global: https://www.linkedin.com/jobs/search?keywords=director+regulatory+affairs+crop+protection
-- Syngenta Careers: https://www.syngenta.com/en/careers/job-search?query=regulatory
-- Corteva Careers: https://jobs.corteva.com/search-jobs/regulatory
-- Bayer Careers: https://career.bayer.com/en/jobs?search=regulatory+affairs
-- BASF Careers: https://www.basf.com/global/en/careers/jobs.html?q=regulatory
-- UPL Careers: https://www.upl-ltd.com/careers
-- FMC Careers: https://jobs.fmc.com/search/?q=regulatory
-- Adama Careers: https://www.adama.com/global/en/careers.html
-- Nufarm Careers: https://www.nufarm.com/global/careers/
-- ENVU Careers: https://www.envu.com/careers
-- Ourofino Agro: https://www.ourofinoagro.com.br/trabalhe-conosco
-- Vagas.com: https://www.vagas.com.br/vagas-de-gerente-regulatorio
-- Indeed Brasil: https://br.indeed.com/jobs?q=gerente+assuntos+regulatorios
-- Agrobase: https://www.agrobase.com.br/oportunidades/
+INSTRUÇÃO CRÍTICA: Para cada fonte, busque vagas DIFERENTES das que você já listou. Não duplique.
+Se uma fonte não tiver vagas abertas hoje, registre "nenhuma vaga" para ela e passe para a próxima.
 
 Para CADA vaga encontrada, retorne um JSON com:
 {{
   "titulo": "título exato do cargo",
   "empresa": "nome da empresa",
   "localizacao": "cidade, estado, país",
-  "link": "URL direto para candidatura",
-  "data_publicacao": "data ou 'há X dias'",
-  "descricao": "descrição resumida (2-3 frases)",
+  "link": "URL direto para candidatura (não a página de busca)",
+  "data_publicacao": "data exata ou 'há X dias' — OBRIGATÓRIO",
+  "descricao": "descrição resumida (3-4 frases incluindo requisitos principais)",
   "salario": "faixa salarial se disponível ou null",
   "tipo_contrato": "CLT/PJ/Full-time/Contract etc",
   "fonte": "nome da plataforma onde encontrou",
   "internacional": true/false
 }}
 
-Retorne APENAS vagas reais e verificadas. Se não encontrar vagas, retorne uma lista vazia [].
+Retorne APENAS vagas reais e verificadas com link direto para candidatura. Se não encontrar vagas, retorne uma lista vazia [].
 Formato de saída: JSON array com todas as vagas encontradas."""
 
     try:
