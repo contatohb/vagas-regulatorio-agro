@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install requests beautifulsoup4 python-dotenv
+          python -m pip install requests beautifulsoup4 python-dotenv openai
 
       - name: Send daily vagas alert
         env:
@@ -46,7 +46,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/vagas_seen.json || true
+          git add data/vagas_regulatorio_seen.json || true
           git diff --cached --quiet || git commit -m "chore: update vagas seen history [skip ci]"
           git pull --rebase origin main || true
           git push || true
