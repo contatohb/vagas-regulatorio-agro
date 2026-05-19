@@ -49,9 +49,9 @@ logger = logging.getLogger("alerta_vagas_regulatorio")
 # ─────────────────────────────────────────────────────────────────────────────
 
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-_DATA_DIR = os.path.join(_SCRIPT_DIR, "data")
+_DATA_DIR = os.path.join(os.path.dirname(_SCRIPT_DIR), "data")  # raiz do repo, não scripts/
 
-RECIPIENT = os.getenv("MONITOR_RECIPIENT", "huddsonviana@gmail.com")
+RECIPIENT = os.getenv("MONITOR_RECIPIENT", "hudsonborges@hb-advisory.com.br")
 SEEN_PATH = os.path.join(_DATA_DIR, "vagas_regulatorio_seen.json")
 LOG_PATH = os.path.join(_DATA_DIR, "vagas_regulatorio_log.json")
 
