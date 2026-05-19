@@ -28,12 +28,6 @@ jobs:
           python -m pip install requests beautifulsoup4 python-dotenv
 
       - name: Send daily vagas alert
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          retry_wait_seconds: 60
-          command: cd scripts && python alerta_vagas_regulatorio.py
         env:
           MONITOR_RECIPIENT: ${{ secrets.MONITOR_RECIPIENT }}
           GMAIL_SENDER: ${{ secrets.GMAIL_SMTP_USER }}
@@ -45,8 +39,10 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
+        run: cd scripts && python alerta_vagas_regulatorio.py
 
       - name: Commit updated seen history
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -54,9 +50,3 @@ jobs:
           git diff --cached --quiet || git commit -m "chore: update vagas seen history [skip ci]"
           git pull --rebase origin main || true
           git push || true
-
-      - name: Notify on failure
-        if: failure()
-        run: |
-          echo "Vagas alert job failed at $(date)"
-          exit 1
