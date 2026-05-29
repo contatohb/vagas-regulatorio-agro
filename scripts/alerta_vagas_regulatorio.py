@@ -270,8 +270,10 @@ def main() -> int:
     else:
         assunto = f"[Empregos] Vagas Regulatório Agro — Nenhuma vaga nova — {hoje_fmt}"
 
-    # Enviar email sempre (com ou sem vagas novas)
-    # Isso garante que o usuário saiba que o sistema está funcionando
+    # Enviar email APENAS quando houver vagas novas
+    if total_novas == 0:
+        logger.info("Nenhuma vaga nova — email não enviado.")
+        return 0
     email_enviado = send_email(assunto, corpo, RECIPIENT)
     if not email_enviado:
         logger.error("Falha no envio do email por todos os métodos disponíveis")
