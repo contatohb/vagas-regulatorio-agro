@@ -235,10 +235,21 @@ def _normalizar(texto: str) -> str:
 
 
 def _gerar_id(vaga: Dict) -> str:
-    # Usar apenas título + empresa (normalizados) para estabilidade entre runs.
-    # Links/URLs podem mudar (query strings, tokens) e causariam o mesmo cargo
-    # a aparecer como "novo" todo dia.
+    link = vaga.get('link', '')
+    # LinkedIn: usar o ID numérico do job posting como ID primário.
+    # Esse ID é estável mesmo quando o título muda de idioma (LinkedIn traduz
+    # automaticamente) ou ganha subtítulo (ex: "Regulatory Lead" →
+    # "Regulatory Lead – Seed Technology (Brazil & South America)").
+    if 'linkedin.com/jobs/view/' in link:
+        m_ln = re.search(r'/jobs/view/(\d+)', link)
+        if m_ln:
+            return f"ln:{m_ln.group(1)}"
+    # Outras fontes: titulo + empresa normalizados (sem subtítulo após " – ")
     titulo = _normalizar(vaga.get('titulo', ''))
+    for sep in [' – ', ' — ']:
+        if sep in titulo:
+            titulo = titulo.split(sep)[0].strip()
+            break
     empresa = _normalizar(vaga.get('empresa', ''))
     chave = f"{titulo}|{empresa}"
     return hashlib.md5(chave.encode("utf-8")).hexdigest()
@@ -1690,25 +1701,53 @@ def filtrar_novas_vagas(
     novas_internacionais = []
     seen_atualizado = dict(seen)
 
+    # Compatibilidade retroativa: índice de hash titulo+empresa de entradas existentes.
+    # Garante que vagas vistas antes da migração para ln:ID não reapareçam.
+    def _hash_titulo_empresa(titulo: str, empresa: str) -> str:
+        t = _normalizar(titulo)
+        for sep in [' – ', ' — ']:
+            if sep in t:
+                t = t.split(sep)[0].strip()
+                break
+        e = _normalizar(empresa)
+        return hashlib.md5(f"{t}|{e}".encode("utf-8")).hexdigest()
+
+    _seen_te_hashes: set = set()
+    for vid, vdata in seen_atualizado.items():
+        if isinstance(vdata, dict):
+            _seen_te_hashes.add(_hash_titulo_empresa(
+                vdata.get("titulo", ""), vdata.get("empresa", "")
+            ))
+
+    def _ja_vista(vaga: Dict) -> bool:
+        vid = vaga["id"]
+        if vid in seen_atualizado:
+            return True
+        # Verificar também pelo hash titulo+empresa (retrocompatibilidade)
+        te_hash = _hash_titulo_empresa(vaga.get("titulo", ""), vaga.get("empresa", ""))
+        return te_hash in _seen_te_hashes
+
     for vaga in nacionais:
         vid = vaga["id"]
-        if vid not in seen_atualizado:
+        if not _ja_vista(vaga):
             novas_nacionais.append(vaga)
             seen_atualizado[vid] = {
                 "titulo": vaga.get("titulo", ""),
                 "empresa": vaga.get("empresa", ""),
                 "data_alerta": datetime.now(timezone.utc).isoformat(),
             }
+            _seen_te_hashes.add(_hash_titulo_empresa(vaga.get("titulo", ""), vaga.get("empresa", "")))
 
     for vaga in internacionais:
         vid = vaga["id"]
-        if vid not in seen_atualizado:
+        if not _ja_vista(vaga):
             novas_internacionais.append(vaga)
             seen_atualizado[vid] = {
                 "titulo": vaga.get("titulo", ""),
                 "empresa": vaga.get("empresa", ""),
                 "data_alerta": datetime.now(timezone.utc).isoformat(),
             }
+            _seen_te_hashes.add(_hash_titulo_empresa(vaga.get("titulo", ""), vaga.get("empresa", "")))
 
     return novas_nacionais, novas_internacionais, seen_atualizado
 
